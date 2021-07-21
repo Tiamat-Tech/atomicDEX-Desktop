@@ -28,6 +28,7 @@
 #include <boost/random/uniform_int_distribution.hpp>
 #include <sodium/crypto_pwhash.h>
 #include <sodium/utils.h>
+#include <sodium/randombytes.h>
 
 //! Project Headers
 #include "atomicdex/api/mm2/mm2.error.code.hpp"
@@ -40,7 +41,7 @@ namespace
     constexpr std::size_t g_chunk_size            = 4096;
     constexpr std::size_t g_buff_len              = (g_chunk_size + crypto_secretstream_xchacha20poly1305_ABYTES);
     constexpr std::size_t g_header_size           = crypto_secretstream_xchacha20poly1305_HEADERBYTES;
-    constexpr const char* g_regex_password_policy = R"(^(?=.{16,})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$€$%{}[\]()\/\\'"`~,;:.<>+\-_=!^&*|?]).*$)";
+    constexpr const char* g_regex_password_policy = R"(^(?=.{16,})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$€£%{}[\]()\/\\'"`~,;:.<>+\-_=!^&*|?]).*$)";
     using t_salt_array                            = std::array<unsigned char, g_salt_len>;
 } // namespace
 
@@ -53,7 +54,8 @@ namespace atomic_dex
         t_salt_array   salt{};
         t_password_key generated_crypto_key{};
 
-        sodium_memzero(salt.data(), salt.size());
+        //randombytes_buf(salt.data(), salt.size()); ///< this couldn't work
+        sodium_memzero(salt.data(), salt.size()); ///< this work but it's not optimal, need to find a solution later, i wonder how we could get the same salt each time without storing it
 
         if (crypto_pwhash(
                 generated_crypto_key.data(), generated_crypto_key.size(), password.c_str(), password.size(), salt.data(), crypto_pwhash_OPSLIMIT_INTERACTIVE,

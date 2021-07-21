@@ -18,13 +18,27 @@ import "../Constants"
 Qaterial.Dialog {
 
     function disconnect() {
-        
-        Qaterial.DialogManager.showDialog({title: qsTr("Confirm Logout"),text: qsTr("Are you sure you want to log out?"),iconSource: Qaterial.Icons.logout,standardButtons: Dialog.Yes | Dialog.Cancel, onAccepted: function(){
-            Qaterial.DialogManager.close()
-            app.currentWalletName = ""
-            API.app.disconnect()
-            onDisconnect()
-        }})
+        let dialog = app.showText({
+            "title": qsTr("Confirm Logout"),
+            text: qsTr("Are you sure you want to log out?") ,
+            standardButtons: Dialog.Yes | Dialog.Cancel,
+            warning: true,
+            width: 300,
+            iconSource: Qaterial.Icons.logout,
+            iconColor: app.globalTheme.accentColor,
+            yesButtonText: qsTr("Yes"),
+            cancelButtonText: qsTr("Cancel"),
+            onAccepted: function(text) {
+                app.currentWalletName = ""
+                API.app.disconnect()
+                onDisconnect()
+                dialog.close()
+                dialog.destroy()
+            },
+            onRejected: function() {
+                userMenu.close()
+            }
+        })
         
     }
 
@@ -265,35 +279,16 @@ Qaterial.Dialog {
                                 DexLabel {
                                     Layout.alignment: Qt.AlignVCenter
                                     Layout.fillWidth: true
-                                    text: qsTr("Use QtTextRendering Or NativeTextRendering")
-                                }
-                                DefaultSwitch {
-                                    id: render_switch
-                                    property bool firstTime: true
-                                    Layout.alignment: Qt.AlignHCenter
-                                    Layout.leftMargin: combo_fiat.Layout.leftMargin
-                                    Layout.rightMargin: Layout.leftMargin
-                                    checked: parseInt(atomic_settings2.value("FontMode")) === 1
-                                }
-                            }
-                            RowLayout {
-                                width: parent.width-30
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                height: 30
-                                DexLabel {
-                                    Layout.alignment: Qt.AlignVCenter
-                                    Layout.fillWidth: true
                                     text: qsTr("Current Font")
                                 }
                                 DexComboBox {
                                     id: dexFont
                                     editable: true
                                     Layout.alignment: Qt.AlignVCenter
-                                    displayText: _font.fontFamily
-                                    model: Qt.fontFamilies()
+                                    model: ["Ubuntu", "Montserrat", "Roboto"]
                                     Component.onCompleted: {
                                         let current = _font.fontFamily
-                                        currentIndex = Qt.fontFamilies().indexOf(current)
+                                        currentIndex = dexFont.model.indexOf(current)
                                     }
                                 }
                             }
@@ -334,12 +329,6 @@ Qaterial.Dialog {
                                         atomic_settings2.sync()
                                         app.load_theme(dexTheme.currentText.replace(".json",""))
                                         _font.fontFamily = dexFont.currentText
-                                        let render_value = render_switch.checked? 1 : 0
-                                        if(render_value == parseInt(atomic_settings2.value("FontMode"))){}
-                                        else {
-                                            atomic_settings2.setValue("FontMode", render_value)
-                                            restart_modal.open()
-                                        }
                                         
                                     }
                                 }
@@ -421,26 +410,6 @@ Qaterial.Dialog {
                                     text: qsTr("Open")
                                     implicitHeight: 37
                                     onClicked: camouflage_password_modal.open()
-                                }
-                            }
-
-
-
-                            RowLayout {
-                                width: parent.width-30
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                height: 60
-                                DexLabel {
-                                    Layout.alignment: Qt.AlignVCenter
-                                    Layout.fillWidth: true
-                                    //text:
-                                }
-                                DexButton {
-                                    text: qsTr("Delete Wallet")
-                                    implicitHeight: 37
-                                    onClicked:  {
-                                        delete_wallet_modal.open()
-                                    }
                                 }
                             }
                         }
